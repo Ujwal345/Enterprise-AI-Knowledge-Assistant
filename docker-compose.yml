@@ -1,0 +1,40 @@
+services:
+  backend:
+    build: ./backend
+    container_name: enterprise-ai-backend
+    ports:
+      - "8000:8000"
+    environment:
+      OLLAMA_HOST: http://host.docker.internal:11434
+    volumes:
+      - ./backend/chroma_db:/app/chroma_db
+
+  frontend:
+    build: ./frontend
+    container_name: enterprise-ai-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      API_URL: http://backend:8000
+    depends_on:
+      - backend
+
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: enterprise-ai-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: enterprise-ai-grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
